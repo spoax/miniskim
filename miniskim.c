@@ -1,10 +1,5 @@
 /* A mini Scheme Interpreter
  *
- * Inspired by lispy[1] and SICP[2].
- *
- * [1] - http://norvig.com/lispy.html
- * [2] - https://mitpress.mit.edu/sicp/
- *
  * Serkan Kenar
  * Al Ain, 2017.
  */
