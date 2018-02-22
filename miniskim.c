@@ -25,7 +25,7 @@
 #define IS_CONS(x)   (x->type == CONS)
 #define IS_LAMBDA(x) (x->type == LAMBDA)
 
-#define NEW(x, y)      do { x = (struct val *) malloc(sizeof(struct val)); x->type = y; } while(0);
+#define NEW(x, y)      do { x = (struct val *) malloc(sizeof(struct val)); if (!x) { perror("malloc"); exit(-1); }  x->type = y; } while(0);
 #define TYPE(x)        (x->type)
 #define ISEQU(x, y)    ( strcmp(x->str, y) == 0 )
 #define FUNC(x)        struct val * x(struct val *args)
@@ -145,16 +145,19 @@ struct val *make_lambda(struct val *car, struct val *cdr)
 /* Parse a scheme expression. */
 struct val* parse()
 {
-    struct val *e;
     int type;
 
     type = gettok();
 
-    if (type == NUM) {
+    if (type == DONE) {
+        return NULL;
+    } else if (type == NUM) {
         return make_num(yy_val);
     } else if (token[0] == '(') {
         struct val *head, *tail, *t = parse();
-        if (t) { tail = head = cons(t, None); }
+        if (!t)
+            return None;
+        tail = head = cons(t, None);
         t = parse();
         while (t != NULL) {
             tail = cdr(tail) = cons(t, None);
@@ -220,31 +223,33 @@ struct val *eval(struct val *exp, struct val *env)
         return exp;
     } else if (IS_CONS(exp)) {
         if (IS_SYMBOL(car(exp))) {
-            if (ISEQU(car(exp), "define") ) {
+            if (ISEQU(car(exp), "define")) {
                 env_insert(env, cadr(exp), eval(caddr(exp), env));
                 return cadr(exp);
             } else if (ISEQU(car(exp), "set!")) {
                 struct val *var = env_find(env, cadr(exp)->str);
                 *var = *eval(caddr(exp), env);
                 return var;
-            } else if (ISEQU(car(exp), "if") ) {
+            } else if (ISEQU(car(exp), "if")) {
                 return eval_if(exp, env);
-            } else if (ISEQU(car(exp), "quote") ) {
+            } else if (ISEQU(car(exp), "quote")) {
                 return cadr(exp);
-            } else if (ISEQU(car(exp), "lambda") ) {
+            } else if (ISEQU(car(exp), "lambda")) {
                 struct val *lmbd;
                 lmbd = cons(cadr(exp), cons(caddr(exp), env));
                 lmbd->type = LAMBDA;
                 return lmbd;
             }
         }
-        struct val *fn = eval(car(exp), env);
-        if (fn == None) {
-            printf("Unknown function: ");
-            pprint(car(exp));
-            printf("\n");
-        } else {
-            return apply(fn, list_of_values(cdr(exp), env));
+        if (car(exp) != None) {
+            struct val *fn = eval(car(exp), env);
+            if (fn == None) {
+                printf("Unknown function: ");
+                pprint(car(exp));
+                printf("\n");
+            } else {
+                return apply(fn, list_of_values(cdr(exp), env));
+            }
         }
     } else {
         printf("shouln't reach here!\n");
@@ -418,29 +423,25 @@ void repl(struct val *env)
 {
     struct val *exp;
 
+    if (finput == stdin) printf(">> ");
     for (;;) {
-        printf(">> ");
         exp = parse();
         if (exp == NULL) break;
-        pprint(eval(exp, env));
-        printf("\n");
+        if (finput == stdin) {
+            pprint(eval(exp, env));
+            printf("\n>> ");
+        }
     }
 }
 
 void load_file(const char *filename, struct val *env)
 {
-    struct val *exp;
-
     finput = fopen(filename, "r");
     if (finput == NULL) {
         printf("unable to open file: %s\n", filename);
         abort();
     }
-    for (;;) {
-        exp = parse();
-        if (exp == NULL) break;
-        eval(exp, env);
-    }
+    repl(env);
     fclose(finput);
 }
 
