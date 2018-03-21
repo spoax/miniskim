@@ -421,14 +421,15 @@ void pprint(struct val *exp)
 
 void repl(struct val *env)
 {
-    struct val *exp;
+    struct val *exp, *res;
 
     if (finput == stdin) printf(">> ");
     for (;;) {
         exp = parse();
         if (exp == NULL) break;
+        res = eval(exp, env);
         if (finput == stdin) {
-            pprint(eval(exp, env));
+            pprint(res);
             printf("\n>> ");
         }
     }
