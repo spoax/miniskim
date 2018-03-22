@@ -236,6 +236,10 @@ struct val *eval(struct val *exp, struct val *env)
                 return cadr(exp);
             } else if (ISEQU(car(exp), "lambda")) {
                 struct val *lmbd;
+                if (!IS_CONS(cadr(exp))) {
+                    printf("Error: lambda takes list of params!\n");
+                    return None;
+                }
                 lmbd = cons(cadr(exp), cons(caddr(exp), env));
                 lmbd->type = LAMBDA;
                 return lmbd;
@@ -244,7 +248,7 @@ struct val *eval(struct val *exp, struct val *env)
         if (car(exp) != None) {
             struct val *fn = eval(car(exp), env);
             if (fn == None) {
-                printf("Unknown function: ");
+                printf("Error: Unknown function: ");
                 pprint(car(exp));
                 printf("\n");
             } else {
@@ -252,7 +256,7 @@ struct val *eval(struct val *exp, struct val *env)
             }
         }
     } else {
-        printf("shouln't reach here!\n");
+        printf("Error: shouln't reach here!\n");
     }
     return None;
 }
@@ -439,7 +443,7 @@ void load_file(const char *filename, struct val *env)
 {
     finput = fopen(filename, "r");
     if (finput == NULL) {
-        printf("unable to open file: %s\n", filename);
+        printf("Error: unable to open file: %s\n", filename);
         abort();
     }
     repl(env);
