@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <math.h>
 
 #define car(x)     (x->car)
 #define cdr(x)     (x->cdr)
@@ -350,6 +350,7 @@ FUNC(sub1)      { return make_num(car(args)->d - 1); }
 FUNC(positiveq) { return car(args)->d > 0.0 ? True : False; }
 FUNC(negativeq) { return car(args)->d < 0.0 ? True : False; }
 FUNC(equals)    { return (cadr(args)->d - car(args)->d) == 0.0 ? True : False; }
+FUNC(f_sqrt)    { return make_num(sqrt(car(args)->d)); }
 FUNC(display)   { pprint(car(args)); printf("\n"); return None; }
 
 FUNC(begin) {
@@ -381,6 +382,7 @@ builtin_entry builtins_tbl[] = {
     { "*",       mul     },
     { "/",       f_div   },
     { "=",       equals  },
+    { "sqrt",    f_sqrt  },
     { "begin",   begin   },
     { "display", display },
     { 0, 0 }
