@@ -1,7 +1,7 @@
 /* A mini Scheme Interpreter
  *
  * Serkan Kenar
- * Al Ain, 2017.
+ * Al Ain, 2017-2018.
  */
 
 #include <ctype.h>
@@ -63,12 +63,25 @@ struct val *eval(struct val *exp, struct val *env);
 void        pprint(struct val *exp);
 
 
+void read_number()
+{
+    int i, ch = getc(finput);
+
+    for (i = 0; isdigit(ch) || ch == '.'; i++) {
+        token[i] = ch;
+        ch = getc(finput);
+    }
+    ungetc(ch, finput);
+    token[i] = 0;
+    yy_val = atof(token);
+}
+
 int gettok()
 {
     int i;
 
     char ch = getc(finput);
-    while (isspace(ch)) { 
+    while (isspace(ch)) {
         ch = getc(finput);
         if (ch == ';') do { ch = getc(finput); } while (ch != '\n');
     }
@@ -76,22 +89,29 @@ int gettok()
         token[0] = ch;
         token[1] = 0;
         return SYMBOL;
-    } else if (isdigit(ch)) {
-        i = 0;
-        while (isdigit(ch) || ch == '.') {
-            token[i++] = ch;
-            ch = getc(finput);
-        }
-        ungetc(ch, finput);
-        token[i] = 0;
-        yy_val = atof(token);
-        return NUM;
+   } else if (ch == '-') {
+       ch = getc(finput);
+       if (isdigit(ch)) {
+           ungetc(ch, finput);
+           read_number();
+           yy_val *= -1;
+           return NUM;
+       } else {
+           ungetc(ch, finput);
+           token[0] = '-';
+           token[1] = 0;
+           return SYMBOL;
+       }
+       return NUM;
+   } else if (isdigit(ch)) {
+       ungetc(ch, finput);
+       read_number();
+       return NUM;
     } else if (ch == EOF) {
         return DONE;
     } else {
-        i = 0;
-        while (!isspace(ch) && ch != ')' && ch != '(') {
-            token[i++] = ch;
+        for (i = 0; !isspace(ch) && ch != ')' && ch != '('; i++) {
+            token[i] = ch;
             ch = getc(finput);
         }
         ungetc(ch, finput);
@@ -392,10 +412,8 @@ struct val *setup_global_env()
 {
     struct val *p = None;
 
-    builtin_entry *e = &builtins_tbl[0];
-    while (e->name) {
+    for (builtin_entry *e = &builtins_tbl[0]; e->name; e++) {
         p = btbl_insert(p, make_str(e->name), make_fn(e->fn));
-        e++;
     }
     return cons(p, None);
 }
@@ -474,4 +492,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
