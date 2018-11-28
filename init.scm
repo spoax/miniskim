@@ -17,3 +17,7 @@
 
 (define sqr (lambda (n) (* n n)))
 
+(define for (lambda (a b f) (if (zero? (- b a)) (quote ()) (cons (f a) (for (+ a 1) b f)))))
+
+(define discriminant (lambda (a b c) (sqrt (- (* b b) (* 4 a c)))))
+
