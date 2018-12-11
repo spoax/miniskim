@@ -362,8 +362,10 @@ double mul_(struct val *l) {
 FUNC(mul) { return make_num(mul_(args));
 }
 double div_(struct val *l) {
-    if (car(l) == None) return 1.0;
-    return car(l)->d * div_(cdr(l));
+    double r;
+    if (cdr(l) == None) return 1.0 / car(l)->d;
+    for (r = car(l)->d; cdr(l) != None; l = cdr(l), r /= car(l)->d) ;
+    return r;
 }
 FUNC(f_div)     { return make_num(div_(args)); }
 FUNC(sub1)      { return make_num(car(args)->d - 1); }
