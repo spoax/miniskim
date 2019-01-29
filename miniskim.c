@@ -233,6 +233,16 @@ struct val *eval_if(struct val *exp, struct val *env)
     }
 }
 
+/* Eval sequence of expressions */
+struct val *eval_sequence(struct val *exp, struct val *env)
+{
+    struct val *e, *v;
+    for (e = exp; e != None; e = cdr(e)) {
+        v = eval(car(e), env);
+    }
+    return v;
+}
+
 /* Eval */
 struct val *eval(struct val *exp, struct val *env)
 {
@@ -263,6 +273,8 @@ struct val *eval(struct val *exp, struct val *env)
                 lmbd = cons(cadr(exp), cons(caddr(exp), env));
                 lmbd->type = LAMBDA;
                 return lmbd;
+            } else if (ISEQU(car(exp), "begin")) {
+                return eval_sequence(cdr(exp), env);
             }
         }
         if (car(exp) != None) {
