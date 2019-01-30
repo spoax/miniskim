@@ -387,15 +387,6 @@ FUNC(equals)    { return (cadr(args)->d - car(args)->d) == 0.0 ? True : False; }
 FUNC(f_sqrt)    { return make_num(sqrt(car(args)->d)); }
 FUNC(display)   { pprint(car(args)); printf("\n"); return None; }
 
-FUNC(begin) {
-    struct val *p = args;
-    while (cdr(p) != None) {
-        p = cdr(p);
-    }
-    return car(p);
-}
-
-
 typedef struct {
     const char *name;
     struct val *(*fn)(struct val *);
@@ -417,7 +408,6 @@ builtin_entry builtins_tbl[] = {
     { "/",       f_div   },
     { "=",       equals  },
     { "sqrt",    f_sqrt  },
-    { "begin",   begin   },
     { "display", display },
     { 0, 0 }
 };
